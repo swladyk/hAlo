@@ -8,18 +8,19 @@ description: The checks to run and the summary to write before finishing any tas
 Run all four from the repo root and fix anything you broke (don't "fix" other features' failures — report them):
 
 ```bash
-(cd backend && ruff check . && pytest)
+(cd backend && uv run ruff check . && uv run pytest)
 (cd frontend && npm run lint && npm run build)
 ```
-Backend venv: `source backend/.venv/bin/activate` first if `ruff`/`pytest` aren't on PATH.
+Backend tools always run through `uv run` (no manual venv activation needed).
 
-If you touched UI or an endpoint, also run the app (`uvicorn app.main:app --reload --port 8000` + `npm run dev`) and try the change at phone width.
+If you touched UI or an endpoint, also run the app (`uv run uvicorn app.main:app --reload --port 8000` + `npm run dev`) and try the change at phone width.
 
 Self-check:
 - [ ] Only my feature folders changed, plus one-line registrations in shared files.
 - [ ] No secrets, URLs or keys hardcoded; new env vars are in `.env.example`.
 - [ ] Tables prefixed `<feature>_`; no Postgres-only SQL.
 - [ ] LLM only via `app/llm.py`; works in mock mode.
+- [ ] New Python packages added with `uv add` (pyproject.toml + uv.lock committed), never pip.
 
 ## Final summary template
 ```
