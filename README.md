@@ -21,7 +21,37 @@ API docs are at http://localhost:8000/docs when the backend is running.
 
 ## Local setup
 
-Prerequisites: [uv](https://docs.astral.sh/uv/getting-started/installation/) (it installs Python 3.14 for you) and Node 24 (`nvm use` reads `frontend/.nvmrc`).
+### 0. Install the tools (once per laptop)
+
+You need **uv** (it installs Python 3.14 for you), plus **nvm** to install **Node 24**, which comes with npm.
+
+**uv**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh     # macOS / Linux (on macOS, `brew install uv` also works)
+# Windows (PowerShell): powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**nvm**
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash     # macOS / Linux
+# Windows: use WSL, or nvm-windows (https://github.com/coreybutler/nvm-windows)
+```
+
+**Node 24 + npm**
+```bash
+nvm install 24
+nvm alias default 24
+```
+
+Open a **new terminal**, then check:
+```bash
+uv --version     # uv 0.x
+node -v          # v24.x
+npm -v           # 11.x or newer
+```
+If `uv` or `nvm` is still "command not found", run `source ~/.bashrc` (or `source ~/.zshrc` on macOS), or restart the terminal.
+
+### 1. Run the app
 
 ```bash
 # Backend (terminal 1)
