@@ -21,17 +21,15 @@ API docs are at http://localhost:8000/docs when the backend is running.
 
 ## Local setup
 
-Prerequisites: Python 3.14 and Node 24 (`nvm use` reads `frontend/.nvmrc`).
+Prerequisites: [uv](https://docs.astral.sh/uv/getting-started/installation/) (it installs Python 3.14 for you) and Node 24 (`nvm use` reads `frontend/.nvmrc`).
 
 ```bash
 # Backend (terminal 1)
 cd backend
-python -m venv .venv          # or: uv venv --python 3.14 .venv
-source .venv/bin/activate
-pip install -r requirements.txt   # or: uv pip install -r requirements.txt
+uv sync                       # creates .venv with Python 3.14 + all deps from uv.lock
 cp .env.example .env          # the defaults work: SQLite + LLM mock mode
-python seed.py
-uvicorn app.main:app --reload --port 8000
+uv run python seed.py
+uv run uvicorn app.main:app --reload --port 8000
 
 # Frontend (terminal 2)
 cd frontend
@@ -46,15 +44,17 @@ To use real Postgres, put your Neon branch URL in `backend/.env` as `DATABASE_UR
 
 | Task | Command |
 |---|---|
-| Backend install | `cd backend && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` |
-| Backend run | `cd backend && uvicorn app.main:app --reload --port 8000` |
-| Backend lint | `cd backend && ruff check .` |
-| Backend tests | `cd backend && pytest` |
-| Seed demo data | `cd backend && python seed.py` |
+| Backend install | `cd backend && uv sync` |
+| Backend run | `cd backend && uv run uvicorn app.main:app --reload --port 8000` |
+| Backend lint | `cd backend && uv run ruff check .` |
+| Backend tests | `cd backend && uv run pytest` |
+| Seed demo data | `cd backend && uv run python seed.py` |
 | Frontend install | `cd frontend && npm install` |
 | Frontend run | `cd frontend && npm run dev` (http://localhost:5173) |
 | Frontend lint | `cd frontend && npm run lint` |
 | Frontend build | `cd frontend && npm run build` |
+
+Add a Python package with `cd backend && uv add <pkg>` (`uv add --dev <pkg>` for dev tools) and commit `pyproject.toml` + `uv.lock`. Don't use pip.
 
 CI (`.github/workflows/ci.yml`) runs frontend lint and build, plus backend ruff and pytest, on every PR and every push to `main`.
 
@@ -66,7 +66,7 @@ Every merge to `main` auto-deploys the frontend to Vercel and the backend to Ren
 1. Create a project at https://console.neon.tech (Postgres, in a region close to the Render region).
 2. The default branch `main` is production. Copy its connection string (`postgresql://...?sslmode=require`).
 3. Create one branch per developer: `dev-<name>`. Each developer puts their branch URL in their own `backend/.env` as `DATABASE_URL`.
-4. Tables are created automatically on backend startup. To add demo data to a branch, run `python seed.py` with that branch's `DATABASE_URL` set.
+4. Tables are created automatically on backend startup. To add demo data to a branch, run `uv run python seed.py` with that branch's `DATABASE_URL` set.
 
 ### 2. Render (backend)
 1. In https://dashboard.render.com, go to **New → Blueprint** and connect this GitHub repo. Render reads `render.yaml` (free web service, root `backend`, health check `/api/health`).

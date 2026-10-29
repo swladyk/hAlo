@@ -26,5 +26,5 @@ Copy the shape of `hello` — it is the reference feature (DB round trip). `chat
 ## Rules
 - Never edit another feature's folder, tables or API fields.
 - New env var → `config.py` + `backend/.env.example` (or `import.meta.env` + `frontend/.env.example`).
-- New dependency → only if a few lines of code won't do; it's a shared change.
+- New dependency → only if a few lines of code won't do; backend via `uv add <pkg>`, frontend via `npm install <pkg>`; it's a shared change.
 - Finish with the `preflight` skill and list every shared change in your summary.

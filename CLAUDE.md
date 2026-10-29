@@ -12,7 +12,7 @@ Project skills for this stack live in `.claude/skills/` (new-feature, fastapi-sq
 | Layer | Tech | Hosting |
 |---|---|---|
 | Frontend | Node 24 + React + Vite + TypeScript + Tailwind CSS + shadcn/ui | Vercel |
-| Backend | Python 3.14 + FastAPI + SQLModel + Uvicorn | Render (free web service) |
+| Backend | Python 3.14 (managed with uv) + FastAPI + SQLModel + Uvicorn | Render (free web service) |
 | Database | Postgres on Neon (`main` branch = live app, one branch per developer); SQLite allowed as local fallback | Neon |
 | LLM | Called **only from the backend**, through `backend/app/llm.py` | — |
 | CI | GitHub Actions (lint + build + tests on every PR) | GitHub |
@@ -41,7 +41,8 @@ No Docker, no Next.js, no extra frameworks or state-management libraries unless 
 │           └── <feature>/    # each feature's components, hooks, types
 └── backend/
     ├── .env.example
-    ├── requirements.txt
+    ├── pyproject.toml        # dependencies (uv); uv.lock is committed
+    ├── uv.lock
     ├── seed.py               # fills the DB with demo data
     ├── tests/
     └── app/
@@ -61,7 +62,7 @@ No Docker, no Next.js, no extra frameworks or state-management libraries unless 
 ## 3. Team rules for agents
 
 1. **Stay in your feature folders.** Only edit `frontend/src/features/<your-feature>/` and `backend/app/features/<your-feature>/`.
-2. **Shared files** (`app/main.py`, `App.tsx`, `lib/api.ts`, `db.py`, `llm.py`, `config.py`, `requirements.txt`, `package.json`, `components/ui/`): make only the **minimal** change needed, such as one line to register your router or route. Never refactor them as a side effect.
+2. **Shared files** (`app/main.py`, `App.tsx`, `lib/api.ts`, `db.py`, `llm.py`, `config.py`, `pyproject.toml`, `uv.lock`, `package.json`, `components/ui/`): make only the **minimal** change needed, such as one line to register your router or route. Never refactor them as a side effect.
 3. **Never change another feature's code, tables or API** without being explicitly told the team agreed.
 4. **API contracts:** every endpoint lives under `/api/<feature>/...`, uses Pydantic/SQLModel schemas for request and response, and appears in the FastAPI OpenAPI docs (`/docs`). Don't rename or remove fields that another feature uses.
 5. **DB tables:** prefix table names with the feature name (e.g. `feed_posts`). Don't modify another feature's tables.
@@ -103,6 +104,7 @@ Notes:
 - `llm.py` exposes a small async interface, e.g. `async def stream_chat(messages: list[dict]) -> AsyncIterator[str]`. Swapping provider or model happens only here.
 - Agent loops must have a maximum number of steps.
 - Don't write files to the backend's local disk. Render's filesystem is wiped on every deploy and restart.
+- Python packages are managed **only with uv**: `uv add <pkg>` (dev tools: `uv add --dev <pkg>`), then commit `pyproject.toml` + `uv.lock`. Never use `pip install` or a `requirements.txt`. Run tools with `uv run ...`.
 - Tests: `pytest` + FastAPI `TestClient`, using an in-memory SQLite DB and LLM mock mode.
 
 ## 6. Frontend conventions
@@ -117,11 +119,11 @@ Notes:
 
 | Task | Command |
 |---|---|
-| Backend install | `cd backend && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` |
-| Backend run | `cd backend && uvicorn app.main:app --reload --port 8000` |
-| Backend lint | `cd backend && ruff check .` |
-| Backend tests | `cd backend && pytest` |
-| Seed demo data | `cd backend && python seed.py` |
+| Backend install | `cd backend && uv sync` |
+| Backend run | `cd backend && uv run uvicorn app.main:app --reload --port 8000` |
+| Backend lint | `cd backend && uv run ruff check .` |
+| Backend tests | `cd backend && uv run pytest` |
+| Seed demo data | `cd backend && uv run python seed.py` |
 | Frontend install | `cd frontend && npm install` |
 | Frontend run | `cd frontend && npm run dev` (http://localhost:5173) |
 | Frontend lint | `cd frontend && npm run lint` |
@@ -137,7 +139,7 @@ Notes:
 ## 9. Deployment
 
 - **Vercel (frontend):** root directory `frontend`, framework Vite, build `npm run build`, output `dist`. Env var: `VITE_API_URL=<Render backend URL>`.
-- **Render (backend):** web service from `render.yaml`, root directory `backend`, build `pip install -r requirements.txt`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check `/api/health`. Env vars: `DATABASE_URL` (Neon `main` branch), `FRONTEND_ORIGINS` (Vercel URL), `LLM_API_KEY`, `LLM_MODEL`.
+- **Render (backend):** web service from `render.yaml`, root directory `backend`, build `pip install uv && uv sync --frozen --no-dev`, start `.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check `/api/health`. Env vars: `DATABASE_URL` (Neon `main` branch), `FRONTEND_ORIGINS` (Vercel URL), `LLM_API_KEY`, `LLM_MODEL`.
 - **Neon:** `main` branch for production, branches `dev-<name>` for each developer.
 - The Render free tier sleeps after ~15 min idle. The first request can take up to a minute, so wake it before demos.
 

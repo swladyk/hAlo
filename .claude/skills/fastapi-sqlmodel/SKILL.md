@@ -41,5 +41,8 @@ def create_item(body: TodoItemCreate, session: SessionDep):
 - Neon URLs are normalized in `app/db.py` (`postgresql+psycopg://`, keeps `sslmode=require`).
 - Never write files to local disk (Render wipes it).
 
+## Dependencies
+Only uv: `cd backend && uv add <pkg>` (`--dev` for test/lint tools); commit `pyproject.toml` + `uv.lock`. Never pip or requirements.txt. It's a shared change — announce it.
+
 ## Tests
-`tests/test_<feature>.py`, use the `client` fixture from `tests/conftest.py` (in-memory SQLite, LLM forced to mock). Register new tables there with an import. Run: `cd backend && ruff check . && pytest`.
+`tests/test_<feature>.py`, use the `client` fixture from `tests/conftest.py` (in-memory SQLite, LLM forced to mock). Register new tables there with an import. Run: `cd backend && uv run ruff check . && uv run pytest`.
